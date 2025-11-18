@@ -10,8 +10,16 @@
 
 struct Cell
 {
-    int i, j;  // Row and column index of the cell in the graph.
+    int row, col;// Row and column index of the cell in the graph.
+    bool visited; //has this cell been visited
+    int cost;
+
+    cell* parent; //parent cell to keep track of where it came from
+    cell(int r = 0, int c = 0)// so I don't have to create a new cell lineage every time
+        : row(r), col(c), visited(false), cost(0), parent(nullptr) {}
+
 };
+
 
 
 /**
