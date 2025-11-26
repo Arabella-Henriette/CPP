@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <string>
+#include <array>
+#include <cstdinct>
 
 #define HIGH 1e6
 #define ROBOT_RADIUS 0.137
@@ -37,10 +39,10 @@ struct GridGraph
     GridGraph() :
         width(-1),
         height(-1),
-        origin_x(0),
-        origin_y(0),
-        meters_per_cell(0),
-        collision_radius(0.15),
+        origin_x(0.0f),
+        origin_y(0.0f),
+        meters_per_cell(0.0f),
+        collision_radius(0.15f),
         threshold(-100)  // TODO: Adjust threshold.
     {
     };
@@ -60,6 +62,10 @@ struct GridGraph
      * TODO (P3): Define the structures you need to store node data in the graph.
      * Use the type defined above.
      */
+std::vector<int> parent_idx;
+std::vector<float> score;
+std::vector<bool> visited_flag;
+
 };
 
 
