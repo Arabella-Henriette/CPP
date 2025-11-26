@@ -62,9 +62,7 @@ struct GridGraph
      * TODO (P3): Define the structures you need to store node data in the graph.
      * Use the type defined above.
      */
-std::vector<int> parent_idx;
-std::vector<float> score;
-std::vector<bool> visited_flag;
+std::vector<Cell> nodes;
 
 };
 
