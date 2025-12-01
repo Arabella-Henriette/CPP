@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <string>
+#include <array>
+#include <cstdint>
 
 #define HIGH 1e6
 #define ROBOT_RADIUS 0.137
@@ -12,10 +14,10 @@ struct Cell
 {
     int row, col;// Row and column index of the cell in the graph.
     bool visited; //has this cell been visited
-    int cost;
+    int cost;//cost to reach cell
 
-    cell* parent; //parent cell to keep track of where it came from
-    cell(int r = 0, int c = 0)// so I don't have to create a new cell lineage every time
+    Cell* parent; //parent cell to keep track of where it came from
+    Cell(int r = 0, int c = 0)// so I don't have to create a new cell lineage every time
         : row(r), col(c), visited(false), cost(0), parent(nullptr) {}
 
 };
@@ -32,34 +34,51 @@ struct Cell
  */
 
 
+struct CellNode
+{
+    int row, col;       // Location in the grid
+    bool visited;       // Has this node been expanded?
+    float cost;         // Cost-to-come (g-score)
+    int parent;         // Parent index for path reconstruction
+
+    CellNode(int r = 0, int c = 0)
+        : row(r), col(c),
+          visited(false),
+          cost(HIGH),
+          parent(-1) {}
+};
+
+
+
 struct GridGraph
 {
     GridGraph() :
         width(-1),
         height(-1),
-        origin_x(0),
-        origin_y(0),
-        meters_per_cell(0),
-        collision_radius(0.15),
-        threshold(-100)  // TODO: Adjust threshold.
+        origin_x(0.0f),
+        origin_y(0.0f),
+        meters_per_cell(0.0f),
+        collision_radius(0.15f),
+        threshold(-100)
     {
     };
 
     int width, height;                      // Width and height of the map in cells.
-    float origin_x, origin_y;               // The (x, y) coordinate corresponding to cell (0, 0) in meters.
+    float origin_x, origin_y;               // (x, y) coordinate of cell (0,0) in meters.
     float meters_per_cell;                  // Width of a cell in meters.
-    float collision_radius;                 // The radius to use to check collisions.
-    int8_t threshold;                       // Threshold to check if a cell is occupied or not.
+    float collision_radius;                 // Radius for collision checks.
+    int8_t threshold;                       // Cell occupancy threshold.
 
-    std::vector<int8_t> cell_odds;          // The odds that a cell is occupied.
-    std::vector<float> obstacle_distances;  // The distance from each cell to the nearest obstacle.
+    std::vector<int8_t> cell_odds;          // Occupancy odds.
+    std::vector<float> obstacle_distances;  // Distance transform from obstacles.
 
-    std::vector<Cell> visited_cells;        // A list of visited cells. Used for visualization.
+    std::vector<Cell> visited_cells;        // ONLY for visualization.
 
     /**
      * TODO (P3): Define the structures you need to store node data in the graph.
      * Use the type defined above.
      */
+    std::vector<CellNode> nodes;            // Stores search state for EACH grid cell
 };
 
 
@@ -210,7 +229,7 @@ static std::vector<std::array<float, 3> > cellsToPoses(std::vector<Cell>& path, 
     for (Cell& cell : path)
     {
         std::array<float, 3> pose;
-        auto position = cellToPos(cell.i, cell.j, graph);
+        auto position = cellToPos(cell.row, cell.col, graph);
         pose[0] = position[0];
         pose[1] = position[1];
         pose[2] = 0;
