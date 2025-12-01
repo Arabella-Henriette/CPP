@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cmath>
 #include <string>
+#include <thread>
+#include <chrono>
 
 #include <mbot_bridge/robot.h>
 
@@ -9,7 +11,6 @@
 #include <path_planning/utils/viz_utils.h>
 #include <path_planning/graph_search/graph_search.h>
 #include <path_planning/graph_search/distance_transform.h>
-
 
 int main(int argc, char const *argv[])
 {
@@ -31,14 +32,16 @@ int main(int argc, char const *argv[])
     GridGraph graph;
     loadFromFile(map_file, graph);
 
-    // TODO: Call your distance transform function if using checkCollisionFast().
-    // HINT: You may want to set a new value for graph.collision_radius.
+    // If using checkCollisionFast, compute distance transform
+    computeDistanceTransform(graph);
 
+    // Convert goal position to cell
     Cell goal = posToCell(goal_x, goal_y, graph);
 
-    // Initialize the robot.
+    // Initialize the robot
     mbot_bridge::MBot robot;
-    // Get the robot's SLAM pose.
+
+    // Get the robot's SLAM pose
     std::vector<float> pose = robot.readSlamPose();
     if (pose.size() == 0)
     {
@@ -46,14 +49,32 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
+    // Convert start position to cell
     Cell start = posToCell(pose[0], pose[1], graph);
 
-    std::vector<Cell> path;
-    // TODO: Call graph search function and put the result in path.
+    // Plan path using BFS
+    std::vector<Cell> path = breadthFirstSearch(graph, start, goal);
 
+    if (path.empty())
+    {
+        std::cerr << "No path found to the goal." << std::endl;
+        return -1;
+    }
+
+    std::cout << "Path found with " << path.size() << " cells. Sending to robot..." << std::endl;
+
+    // Send path to robot
     robot.drivePath(cellsToPoses(path, graph));
 
-    // Save the path output file for visualization in the nav app.
+    // Optional: Wait until robot reaches the goal
+    while (!robot.isAtGoal())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    std::cout << "Robot has reached the goal!" << std::endl;
+
+    // Save the path output file for visualization
     generatePlanFile(start, goal, path, graph);
 
     return 0;
